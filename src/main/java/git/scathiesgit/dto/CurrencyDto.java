@@ -62,10 +62,14 @@ public class CurrencyDto {
 
     @Override
     public String toString() {
-        return "CurrencyDto{" +
-                "name='" + name + '\'' +
-                ", code='" + code + '\'' +
-                ", sign='" + sign + '\'' +
+        return "CurrencyDto{"
+                +
+                "name='" + name + '\''
+                +
+                ", code='" + code + '\''
+                +
+                ", sign='" + sign + '\''
+                +
                 '}';
     }
 }
