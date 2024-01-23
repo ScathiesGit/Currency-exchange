@@ -17,7 +17,7 @@ public class CurrencyDaoTest {
 
     @Test
     void notEmptyDB_getAllCurrencies_notEmptyList() {
-        List<Currency> currencies = currencyDao.getAllCurrencies();
+        List<Currency> currencies = currencyDao.findAll();
 
         assertThat(currencies.isEmpty()).isFalse();
     }
@@ -26,7 +26,7 @@ public class CurrencyDaoTest {
     void getCurrencyWithExistCode_notZeroId() {
         var existCurrencyCode = "USD";
 
-        var currency = currencyDao.getCurrencyByCode(existCurrencyCode);
+        var currency = currencyDao.findByCode(existCurrencyCode);
 
         assertThat(currency.getId()).isPositive();
     }
@@ -36,7 +36,7 @@ public class CurrencyDaoTest {
         var nonExistCurrencyCode = "R";
         var expected = 0;
 
-        var currency = currencyDao.getCurrencyByCode(nonExistCurrencyCode);
+        var currency = currencyDao.findByCode(nonExistCurrencyCode);
         var actual = currency.getId();
 
         assertThat(actual).isEqualTo(expected);

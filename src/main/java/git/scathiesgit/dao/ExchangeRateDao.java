@@ -52,10 +52,10 @@ public class ExchangeRateDao {
             """;
 
     public int update(ExchangeRateDto dto) {
-        int baseId = findCurrencyIdByCode(dto.getBaseCurrencyCode());
-        int targetId = findCurrencyIdByCode(dto.getTargetCurrencyCode());
+        int baseId = findByCodeCurrencyId(dto.getBaseCurrencyCode());
+        int targetId = findByCodeCurrencyId(dto.getTargetCurrencyCode());
         if (baseId != 0 && targetId != 0) {
-            var exchangeRateId = findByCurrenciesId(baseId, targetId).getId();
+            var exchangeRateId = findByCurrencyId(baseId, targetId).getId();
             if (exchangeRateId != 0) {
                 update(baseId, targetId, dto.getRate());
                 return exchangeRateId;
@@ -77,8 +77,8 @@ public class ExchangeRateDao {
     }
 
     public int save(ExchangeRateDto dto) {
-        int baseId = findCurrencyIdByCode(dto.getBaseCurrencyCode());
-        int targetId = findCurrencyIdByCode(dto.getTargetCurrencyCode());
+        int baseId = findByCodeCurrencyId(dto.getBaseCurrencyCode());
+        int targetId = findByCodeCurrencyId(dto.getTargetCurrencyCode());
         if (baseId != 0 && targetId != 0) {
             return save(baseId, targetId, dto.getRate());
         }
@@ -99,13 +99,13 @@ public class ExchangeRateDao {
         }
     }
 
-    public List<ExchangeRate> getAllExchangeRate() {
+    public List<ExchangeRate> findAll() {
         List<ExchangeRate> exchangeRates = new ArrayList<>();
         try (var connection = ConnectionManager.open();
              var statement = connection.prepareStatement(GET_ALL_EXCHANGE_RATES_SQL)) {
             var resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                exchangeRates.add(createExchangeRate(resultSet));
+                exchangeRates.add(toExchangeRate(resultSet));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -113,7 +113,7 @@ public class ExchangeRateDao {
         return exchangeRates;
     }
 
-    private ExchangeRate createExchangeRate(ResultSet resultSet) throws SQLException {
+    private ExchangeRate toExchangeRate(ResultSet resultSet) throws SQLException {
         return ExchangeRate.builder()
                 .id(resultSet.getInt(ID_COL))
                 .baseCurrencyId(resultSet.getInt(BASE_CURRENCY_ID_COL))
@@ -122,13 +122,13 @@ public class ExchangeRateDao {
                 .build();
     }
 
-    public ExchangeRate findByCurrenciesCodes(String baseCode, String targetCode) {
-        int baseId = findCurrencyIdByCode(baseCode);
-        int targetId = findCurrencyIdByCode(targetCode);
-        return findByCurrenciesId(baseId, targetId);
+    public ExchangeRate findByCurrencyCodes(String baseCode, String targetCode) {
+        int baseId = findByCodeCurrencyId(baseCode);
+        int targetId = findByCodeCurrencyId(targetCode);
+        return findByCurrencyId(baseId, targetId);
     }
 
-    private ExchangeRate findByCurrenciesId(int baseId, int targetId) {
+    private ExchangeRate findByCurrencyId(int baseId, int targetId) {
         var resultExchangeRate = new ExchangeRate();
         try (var connection = ConnectionManager.open();
              var statement = connection.prepareStatement(GET_EXCHANGE_RATE_SQL)) {
@@ -136,7 +136,7 @@ public class ExchangeRateDao {
             statement.setInt(2, targetId);
             var resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                resultExchangeRate = createExchangeRate(resultSet);
+                resultExchangeRate = toExchangeRate(resultSet);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -144,34 +144,34 @@ public class ExchangeRateDao {
         return resultExchangeRate;
     }
 
-    private int findCurrencyIdByCode(String code) {
+    private int findByCodeCurrencyId(String code) {
         var currencyDao = CurrencyDao.getInstance();
-        return currencyDao.getCurrencyByCode(code).getId();
+        return currencyDao.findByCode(code).getId();
     }
 
-    public BigDecimal findExchangeRate(ExchangeRateDto dto) {
-        var straightExchangeRate = findByCurrenciesCodes(dto.getBaseCurrencyCode(), dto.getTargetCurrencyCode());
+    public BigDecimal findByCurrencyCodesOrCrossRate(String baseCode, String targetCode) {
+        var straightExchangeRate = findByCurrencyCodes(baseCode, targetCode);
         if (straightExchangeRate.getId() != 0) {
             return straightExchangeRate.getRate();
         }
 
-        var reverseExchangeRate = findByCurrenciesCodes(dto.getTargetCurrencyCode(), dto.getBaseCurrencyCode());
+        var reverseExchangeRate = findByCurrencyCodes(baseCode, targetCode);
         if (reverseExchangeRate.getId() != 0) {
             reverseExchangeRate.setRate(BigDecimal.ONE.divide(
                             reverseExchangeRate.getRate(), NUMBER_OF_DIGIT_AFTER_DOT, RoundingMode.CEILING));
             return reverseExchangeRate.getRate();
         }
 
-        return findCrossRateThroughUSD(dto);
+        return findByCrossRateThroughUSD(baseCode, targetCode);
     }
 
-    private BigDecimal findCrossRateThroughUSD(ExchangeRateDto dto) {
-        var usdId = findCurrencyIdByCode("USD");
-        var baseId = findCurrencyIdByCode(dto.getBaseCurrencyCode());
-        var targetId = findCurrencyIdByCode(dto.getTargetCurrencyCode());
+    private BigDecimal findByCrossRateThroughUSD(String baseCode, String targetCode) {
+        var usdId = findByCodeCurrencyId("USD");
+        var baseId = findByCodeCurrencyId(baseCode);
+        var targetId = findByCodeCurrencyId(targetCode);
 
-        var rateUsdToBase = findByCurrenciesId(usdId, baseId).getRate();
-        var rateUsdToTarget = findByCurrenciesId(usdId, targetId).getRate();
+        var rateUsdToBase = findByCurrencyId(usdId, baseId).getRate();
+        var rateUsdToTarget = findByCurrencyId(usdId, targetId).getRate();
 
         if (rateUsdToTarget != null && rateUsdToBase != null) {
             return rateUsdToTarget.divide(rateUsdToBase, NUMBER_OF_DIGIT_AFTER_DOT, RoundingMode.CEILING);

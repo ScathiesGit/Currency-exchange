@@ -16,7 +16,7 @@ public class ExchangeRateDaoTest {
 
     @Test
     void notEmptyDB_getAllExchangeRate_notEmptyList() {
-        var exchangeRates = exchangeRateDao.getAllExchangeRate();
+        var exchangeRates = exchangeRateDao.findAll();
 
         assertThat(exchangeRates.isEmpty()).isFalse();
     }
@@ -26,7 +26,7 @@ public class ExchangeRateDaoTest {
         var baseCurrencyCode = "USD";
         var targetCurrencyCode = "EUR";
 
-        var actual = exchangeRateDao.findByCurrenciesCodes(baseCurrencyCode, targetCurrencyCode).getId();
+        var actual = exchangeRateDao.findByCurrencyCodes(baseCurrencyCode, targetCurrencyCode).getId();
 
         assertThat(actual).isPositive();
     }
@@ -36,7 +36,7 @@ public class ExchangeRateDaoTest {
         var baseCurrencyCode = "U";
         var targetCurrencyCode = "R";
 
-        var actual = exchangeRateDao.findByCurrenciesCodes(baseCurrencyCode, targetCurrencyCode).getId();
+        var actual = exchangeRateDao.findByCurrencyCodes(baseCurrencyCode, targetCurrencyCode).getId();
 
         assertThat(actual).isZero();
     }
@@ -130,36 +130,30 @@ public class ExchangeRateDaoTest {
 
     @Test
     void existStraightRate_findExchangeRate_returnRateIsNotZero() {
-        var dto = ExchangeRateDto.builder()
-                .baseCurrencyCode("USD")
-                .targetCurrencyCode("EUR")
-                .build();
+        var baseCode = "USD";
+        var targetCode = "EUR";
 
-        var rate = exchangeRateDao.findExchangeRate(dto);
+        var rate = exchangeRateDao.findByCurrencyCodesOrCrossRate(baseCode, targetCode);
 
         assertThat(rate).isPositive();
     }
 
     @Test
     void existReverseRate_findExchangeRate_returnRateIsNotZero() {
-        var dto = ExchangeRateDto.builder()
-                .baseCurrencyCode("EUR")
-                .targetCurrencyCode("USD")
-                .build();
+        var baseCode = "EUR";
+        var targetCode = "EUR";
 
-        var rate = exchangeRateDao.findExchangeRate(dto);
+        var rate = exchangeRateDao.findByCurrencyCodesOrCrossRate(baseCode, targetCode);
 
         assertThat(rate).isPositive();
     }
 
     @Test
     void existCrossRate_findExchangeRate_returnRateIsNotZero() {
-        var dto = ExchangeRateDto.builder()
-                .baseCurrencyCode("EUR")
-                .targetCurrencyCode("GBP")
-                .build();
+        var baseCode = "EUR";
+        var targetCode = "GBP";
 
-        var rate = exchangeRateDao.findExchangeRate(dto);
+        var rate = exchangeRateDao.findByCurrencyCodesOrCrossRate(baseCode, targetCode);
 
         assertThat(rate).isPositive();
     }

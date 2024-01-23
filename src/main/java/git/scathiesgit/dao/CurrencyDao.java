@@ -42,14 +42,14 @@ public class CurrencyDao {
         return INSTANCE;
     }
 
-    public Currency getCurrencyByCode(String code) {
+    public Currency findByCode(String code) {
         var resultCurrency = new Currency();
         try (var connection = ConnectionManager.open();
              var statement = connection.prepareStatement(GET_CURRENCY_BY_CODE_SQL)) {
             statement.setString(1, code);
             var resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                resultCurrency = createCurrency(resultSet);
+                resultCurrency = toCurrency(resultSet);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -57,13 +57,13 @@ public class CurrencyDao {
         return resultCurrency;
     }
 
-    public List<Currency> getAllCurrencies() {
+    public List<Currency> findAll() {
         List<Currency> currencies = new ArrayList<>();
         try (var connection = ConnectionManager.open();
              var statement = connection.prepareStatement(GET_ALL_CURRENCIES_SQL)) {
             var resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                var currency = createCurrency(resultSet);
+                var currency = toCurrency(resultSet);
                 currencies.add(currency);
             }
         } catch (SQLException e) {
@@ -85,7 +85,7 @@ public class CurrencyDao {
         }
     }
 
-    private Currency createCurrency(ResultSet resultSet) throws SQLException {
+    private Currency toCurrency(ResultSet resultSet) throws SQLException {
         return Currency.builder()
                 .id(resultSet.getInt(ID_COL))
                 .code(resultSet.getString(CODE_COL))
