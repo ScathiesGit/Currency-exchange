@@ -48,7 +48,7 @@ public class CurrencyDaoTest {
         var code = "TestCode";
         var sign = "#$%&";
 
-        var actual = currencyDao.save(CurrencyDto.newBuilder()
+        var actual = currencyDao.save(CurrencyDto.builder()
                 .name(name)
                 .code(code)
                 .sign(sign)
@@ -72,7 +72,7 @@ public class CurrencyDaoTest {
 
     @Test
     void saveCurrencyWithExistCode_shouldThrownRuntimeException() {
-        var dto = CurrencyDto.newBuilder()
+        var dto = CurrencyDto.builder()
                 .code("USD")
                 .build();
 

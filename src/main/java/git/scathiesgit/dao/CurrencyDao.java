@@ -86,7 +86,7 @@ public class CurrencyDao {
     }
 
     private Currency createCurrency(ResultSet resultSet) throws SQLException {
-        return Currency.newBuilder()
+        return Currency.builder()
                 .id(resultSet.getInt(ID_COL))
                 .code(resultSet.getString(CODE_COL))
                 .fullName(resultSet.getString(FULL_NAME_COL))

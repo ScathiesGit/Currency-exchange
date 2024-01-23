@@ -114,7 +114,7 @@ public class ExchangeRateDao {
     }
 
     private ExchangeRate createExchangeRate(ResultSet resultSet) throws SQLException {
-        return ExchangeRate.newBuilder()
+        return ExchangeRate.builder()
                 .id(resultSet.getInt(ID_COL))
                 .baseCurrencyId(resultSet.getInt(BASE_CURRENCY_ID_COL))
                 .targetCurrencyId(resultSet.getInt(TARGET_CURRENCY_ID_COL))

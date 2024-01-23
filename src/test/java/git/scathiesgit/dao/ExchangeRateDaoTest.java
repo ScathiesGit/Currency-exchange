@@ -43,7 +43,7 @@ public class ExchangeRateDaoTest {
 
     @Test
     void notExistCurrencyCode_saveExchangeRate_shouldThrowRuntimeException() {
-        var dto = ExchangeRateDto.newBuilder()
+        var dto = ExchangeRateDto.builder()
                 .baseCurrencyCode("EUR")
                 .targetCurrencyCode("E")
                 .rate(BigDecimal.valueOf(12.2))
@@ -55,7 +55,7 @@ public class ExchangeRateDaoTest {
 
     @Test
     void existExchangeRate_saveExchangeRate_shouldThrowRuntimeException() {
-        var dto = ExchangeRateDto.newBuilder()
+        var dto = ExchangeRateDto.builder()
                 .baseCurrencyCode("USD")
                 .targetCurrencyCode("EUR")
                 .rate(BigDecimal.valueOf(1.2))
@@ -67,7 +67,7 @@ public class ExchangeRateDaoTest {
 
     @Test
     void dbNotContainsExchangeRate_save_idIsNotZero() {
-        var dto = ExchangeRateDto.newBuilder()
+        var dto = ExchangeRateDto.builder()
                 .baseCurrencyCode("GBP")
                 .targetCurrencyCode("JPY")
                 .rate(BigDecimal.valueOf(170.5))
@@ -93,7 +93,7 @@ public class ExchangeRateDaoTest {
 
     @Test
     void notExistExchangeRate_update_shouldThrowRuntimeException() {
-        var exchangeRate = ExchangeRateDto.newBuilder()
+        var exchangeRate = ExchangeRateDto.builder()
                 .baseCurrencyCode("GBP")
                 .targetCurrencyCode("EUR")
                 .rate(BigDecimal.valueOf(1.11))
@@ -105,7 +105,7 @@ public class ExchangeRateDaoTest {
 
     @Test
     void existExchangeRate_update_idIsNotZero() {
-        var exchangeRate = ExchangeRateDto.newBuilder()
+        var exchangeRate = ExchangeRateDto.builder()
                 .baseCurrencyCode("USD")
                 .targetCurrencyCode("EUR")
                 .rate(BigDecimal.valueOf(1.15))
@@ -118,7 +118,7 @@ public class ExchangeRateDaoTest {
 
     @Test
     void notExistCurrencyCodes_update_shouldThrowRuntimeException() {
-        var dto = ExchangeRateDto.newBuilder()
+        var dto = ExchangeRateDto.builder()
                 .baseCurrencyCode("USD")
                 .targetCurrencyCode("Y")
                 .rate(BigDecimal.valueOf(1.22))
@@ -130,7 +130,7 @@ public class ExchangeRateDaoTest {
 
     @Test
     void existStraightRate_findExchangeRate_returnRateIsNotZero() {
-        var dto = ExchangeRateDto.newBuilder()
+        var dto = ExchangeRateDto.builder()
                 .baseCurrencyCode("USD")
                 .targetCurrencyCode("EUR")
                 .build();
@@ -142,7 +142,7 @@ public class ExchangeRateDaoTest {
 
     @Test
     void existReverseRate_findExchangeRate_returnRateIsNotZero() {
-        var dto = ExchangeRateDto.newBuilder()
+        var dto = ExchangeRateDto.builder()
                 .baseCurrencyCode("EUR")
                 .targetCurrencyCode("USD")
                 .build();
@@ -154,7 +154,7 @@ public class ExchangeRateDaoTest {
 
     @Test
     void existCrossRate_findExchangeRate_returnRateIsNotZero() {
-        var dto = ExchangeRateDto.newBuilder()
+        var dto = ExchangeRateDto.builder()
                 .baseCurrencyCode("EUR")
                 .targetCurrencyCode("GBP")
                 .build();
@@ -166,7 +166,7 @@ public class ExchangeRateDaoTest {
 
     @Test
     void whenImpossibleFindRate_findExchangeRate_shouldThrowRuntimeException() {
-        var dto = ExchangeRateDto.newBuilder()
+        var dto = ExchangeRateDto.builder()
                 .baseCurrencyCode("JPY")
                 .targetCurrencyCode("AUD")
                 .build();
