@@ -16,8 +16,6 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
 
     private final Executor executor = new Executor();
 
-    private static final int DIGIT_PRECISION = 3;
-
     private static final String SELECT_ALL_SQL = """
             SELECT id, BaseCurrencyId, TargetCurrencyId, Rate
             FROM ExchangeRates;
@@ -116,50 +114,6 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
             result = OptionalInt.of(exchangeRate.get().getId());
         }
         return result;
-    }
-
-    @Override
-    public Optional<BigDecimal> findExchangeRate(ExchangeRate rate) {
-        var exchangeRate = findByCurrencyIDs(rate);
-        if (exchangeRate.isPresent()) {
-            return Optional.of(exchangeRate.get().getRate());
-        }
-
-        var reverseRate = findReverseRate(rate);
-        if (reverseRate.isPresent()) {
-            return Optional.of(reverseRate.get().getRate());
-        }
-
-        var rateUsdToBase = findUsdWithTarget(rate.getBaseCurrencyId());
-        var rateUsdToTarget = findUsdWithTarget(rate.getTargetCurrencyId());
-        if (rateUsdToBase.isPresent() && rateUsdToTarget.isPresent()) {
-            return Optional.of(rateUsdToTarget.get().getRate()
-                    .divide(rateUsdToBase.get().getRate(), DIGIT_PRECISION, RoundingMode.CEILING));
-        }
-
-        return Optional.empty();
-    }
-
-    private Optional<ExchangeRate> findReverseRate(ExchangeRate rate) {
-        return findByCurrencyIDs(
-                ExchangeRate.builder()
-                        .baseCurrencyId(rate.getTargetCurrencyId())
-                        .targetCurrencyId(rate.getBaseCurrencyId())
-                        .build()
-        );
-    }
-
-    private Optional<ExchangeRate> findUsdWithTarget(int targetId) {
-        var currencyUsd = new CurrencyDaoImpl().findByCode("USD");
-        if (currencyUsd.isPresent()) {
-            return findByCurrencyIDs(
-                    ExchangeRate.builder()
-                            .baseCurrencyId(currencyUsd.get().getId())
-                            .targetCurrencyId(targetId)
-                            .build()
-            );
-        }
-        return Optional.empty();
     }
 
     private ExchangeRate toExchangeRate(ResultSet resultSet) throws SQLException {

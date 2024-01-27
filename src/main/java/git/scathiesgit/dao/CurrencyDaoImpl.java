@@ -92,7 +92,7 @@ public class CurrencyDaoImpl implements CurrencyDao {
     }
 
     @Override
-    public OptionalInt save(Currency currency) {
+    public int save(Currency currency) {
         return executor.executeUpdate(SAVE_SQL, Statement.RETURN_GENERATED_KEYS, statement -> {
             try {
                 statement.setString(1, currency.getCode());
@@ -101,7 +101,7 @@ public class CurrencyDaoImpl implements CurrencyDao {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-        });
+        }).getAsInt();
     }
 
     private Currency toCurrency(ResultSet resultSet) {

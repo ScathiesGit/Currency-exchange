@@ -79,7 +79,7 @@ public class CurrencyDaoImplTest {
 
         var actual = CURRENCY_DAO.save(currency);
 
-        assertThat(actual.isPresent()).isTrue();
+        assertThat(actual).isPositive();
 
         deleteAddedCurrency(currency);
     }
