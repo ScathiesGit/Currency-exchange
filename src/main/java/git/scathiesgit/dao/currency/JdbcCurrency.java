@@ -1,5 +1,7 @@
-package git.scathiesgit.dao;
+package git.scathiesgit.dao.currency;
 
+import git.scathiesgit.dao.JdbcExecutor;
+import git.scathiesgit.dto.CurrencyData;
 import git.scathiesgit.entity.Currency;
 
 import java.sql.ResultSet;
@@ -7,9 +9,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 
-public class CurrencyDaoImpl implements CurrencyDao {
+public class JdbcCurrency implements CurrencyDao {
 
-    private final Executor executor = new Executor();
+    private final JdbcExecutor jdbcExecutor = new JdbcExecutor();
 
     private static final String SAVE_SQL = """
             INSERT INTO Currencies(Code, FullName, Sign)
@@ -35,7 +37,7 @@ public class CurrencyDaoImpl implements CurrencyDao {
 
     @Override
     public Optional<Currency> findByCode(String code) {
-        return executor.executeQuery(SELECT_BY_CODE_SQL, statement -> {
+        return jdbcExecutor.executeQuery(SELECT_BY_CODE_SQL, statement -> {
             try {
                 statement.setString(1, code);
             } catch (SQLException e) {
@@ -56,7 +58,7 @@ public class CurrencyDaoImpl implements CurrencyDao {
 
     @Override
     public Optional<Currency> findById(int id) {
-        return executor.executeQuery(SELECT_BY_ID, statement -> {
+        return jdbcExecutor.executeQuery(SELECT_BY_ID, statement -> {
             try {
                 statement.setInt(1, id);
             } catch (SQLException e) {
@@ -77,7 +79,7 @@ public class CurrencyDaoImpl implements CurrencyDao {
 
     @Override
     public List<Currency> findAll() {
-        return executor.executeQuery(SELECT_ALL_SQL, statement -> {
+        return jdbcExecutor.executeQuery(SELECT_ALL_SQL, statement -> {
         }, resultSet -> {
             List<Currency> currencies = new ArrayList<>();
             try {
@@ -92,12 +94,12 @@ public class CurrencyDaoImpl implements CurrencyDao {
     }
 
     @Override
-    public int save(Currency currency) {
-        return executor.executeUpdate(SAVE_SQL, Statement.RETURN_GENERATED_KEYS, statement -> {
+    public int save(CurrencyData data) {
+        return jdbcExecutor.executeUpdate(SAVE_SQL, Statement.RETURN_GENERATED_KEYS, statement -> {
             try {
-                statement.setString(1, currency.getCode());
-                statement.setString(2, currency.getFullName());
-                statement.setString(3, currency.getSign());
+                statement.setString(1, data.getCode());
+                statement.setString(2, data.getFullName());
+                statement.setString(3, data.getSign());
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

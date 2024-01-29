@@ -1,5 +1,6 @@
-package git.scathiesgit.dao;
+package git.scathiesgit.dao.currency;
 
+import git.scathiesgit.dto.CurrencyData;
 import git.scathiesgit.entity.Currency;
 
 import java.util.List;
@@ -14,5 +15,5 @@ public interface CurrencyDao {
 
     List<Currency> findAll();
 
-    int save(Currency currency);
+    int save(CurrencyData data);
 }

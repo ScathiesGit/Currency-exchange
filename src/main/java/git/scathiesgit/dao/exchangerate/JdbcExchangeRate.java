@@ -1,9 +1,12 @@
-package git.scathiesgit.dao;
+package git.scathiesgit.dao.exchangerate;
 
+import git.scathiesgit.dao.JdbcExecutor;
+import git.scathiesgit.dao.currency.CurrencyDao;
+import git.scathiesgit.dao.currency.JdbcCurrency;
+import git.scathiesgit.dto.ExchangeRateData;
 import git.scathiesgit.entity.ExchangeRate;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -12,9 +15,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 
-public class ExchangeRateDaoImpl implements ExchangeRateDao {
+public class JdbcExchangeRate implements ExchangeRateDao {
 
-    private final Executor executor = new Executor();
+    private final JdbcExecutor jdbcExecutor = new JdbcExecutor();
 
     private static final String SELECT_ALL_SQL = """
             SELECT id, BaseCurrencyId, TargetCurrencyId, Rate
@@ -40,7 +43,7 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
 
     @Override
     public List<ExchangeRate> findAll() {
-        return executor.executeQuery(SELECT_ALL_SQL, statement -> {
+        return jdbcExecutor.executeQuery(SELECT_ALL_SQL, statement -> {
         }, resultSet -> {
             List<ExchangeRate> exchangeRates = new ArrayList<>();
             try {
@@ -54,11 +57,11 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
         });
     }
 
-    public Optional<ExchangeRate> findByCurrencyIDs(ExchangeRate rate) {
-        return executor.executeQuery(SELECT_BY_CURRENCY_ID_SQL, statement -> {
+    public Optional<ExchangeRate> findByCurrencyIDs(ExchangeRateData data) {
+        return jdbcExecutor.executeQuery(SELECT_BY_CURRENCY_ID_SQL, statement -> {
             try {
-                statement.setInt(1, rate.getBaseCurrencyId());
-                statement.setInt(2, rate.getTargetCurrencyId());
+                statement.setInt(1, data.getBaseCurrencyId());
+                statement.setInt(2, data.getTargetCurrencyId());
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -76,14 +79,14 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
     }
 
     @Override
-    public OptionalInt save(ExchangeRate rate) {
+    public OptionalInt save(ExchangeRateData data) {
         var result = OptionalInt.empty();
-        if (isExistCurrency(rate.getBaseCurrencyId()) && isExistCurrency(rate.getTargetCurrencyId())) {
-            result = executor.executeUpdate(SAVE_SQL, Statement.RETURN_GENERATED_KEYS, statement -> {
+        if (isExistCurrency(data.getBaseCurrencyId()) && isExistCurrency(data.getTargetCurrencyId())) {
+            result = jdbcExecutor.executeUpdate(SAVE_SQL, Statement.RETURN_GENERATED_KEYS, statement -> {
                 try {
-                    statement.setInt(1, rate.getBaseCurrencyId());
-                    statement.setInt(2, rate.getTargetCurrencyId());
-                    statement.setBigDecimal(3, rate.getRate());
+                    statement.setInt(1, data.getBaseCurrencyId());
+                    statement.setInt(2, data.getTargetCurrencyId());
+                    statement.setBigDecimal(3, data.getRate());
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -93,19 +96,19 @@ public class ExchangeRateDaoImpl implements ExchangeRateDao {
     }
 
     private boolean isExistCurrency(int baseId) {
-        CurrencyDao currencyDao = new CurrencyDaoImpl();
+        CurrencyDao currencyDao = new JdbcCurrency();
         return currencyDao.findById(baseId).isPresent();
     }
 
     @Override
-    public OptionalInt update(ExchangeRate rate) {
+    public OptionalInt update(ExchangeRateData data) {
         var result = OptionalInt.empty();
-        var exchangeRate = findByCurrencyIDs(rate);
+        var exchangeRate = findByCurrencyIDs(data);
 
         if (exchangeRate.isPresent()) {
-            executor.executeUpdate(UPDATE_SQL, Statement.NO_GENERATED_KEYS, statement -> {
+            jdbcExecutor.executeUpdate(UPDATE_SQL, Statement.NO_GENERATED_KEYS, statement -> {
                 try {
-                    statement.setBigDecimal(1, rate.getRate());
+                    statement.setBigDecimal(1, data.getRate());
                     statement.setInt(2, exchangeRate.get().getId());
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
