@@ -1,4 +1,4 @@
-package git.scathiesgit.util;
+package exchanger.util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
