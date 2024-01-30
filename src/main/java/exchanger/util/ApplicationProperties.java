@@ -1,4 +1,4 @@
-package git.scathiesgit.util;
+package exchanger.util;
 
 import java.io.IOException;
 import java.util.Properties;

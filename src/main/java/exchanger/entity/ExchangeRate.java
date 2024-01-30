@@ -1,6 +1,8 @@
-package git.scathiesgit.entity;
+package exchanger.entity;
 
 import lombok.*;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -9,11 +11,11 @@ import lombok.*;
 @Builder
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Currency {
+public class ExchangeRate {
 
     @EqualsAndHashCode.Include
     private int id;
-    private String code;
-    private String fullName;
-    private String sign;
+    private int baseCurrencyId;
+    private int targetCurrencyId;
+    private BigDecimal rate;
 }
