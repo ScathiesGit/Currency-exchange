@@ -15,6 +15,11 @@ public class JdbcCurrencyRepository implements CurrencyRepository {
             VALUES (?, ?, ?)
             """;
 
+    private static final String DELETE = """
+            DELETE FROM Currencies
+            WHERE Id = ?
+            """;
+
     private static final String SELECT_BY_ID = """
             SELECT Id, Code, FullName, Sign
             FROM Currencies
@@ -55,6 +60,20 @@ public class JdbcCurrencyRepository implements CurrencyRepository {
     }
 
     @Override
+    public boolean delete(int id) {
+        var isDeleted = false;
+        try (var con = ConnectionManager.open();
+             var statement = con.prepareStatement(DELETE)
+        ) {
+            statement.setInt(1, id);
+            isDeleted = statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return isDeleted;
+    }
+
+    @Override
     public Optional<Currency> findById(int id) {
         try (var con = ConnectionManager.open();
              var statement = con.prepareStatement(SELECT_BY_ID)
@@ -76,6 +95,7 @@ public class JdbcCurrencyRepository implements CurrencyRepository {
         try (var con = ConnectionManager.open();
              var statement = con.prepareStatement(SELECT_BY_CODE)
         ) {
+            statement.setString(1, code);
             var resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 var currency = toCurrency(resultSet);

@@ -23,6 +23,11 @@ public class JdbcExchangeRateRepository implements ExchangeRateRepository {
             WHERE id = ?
             """;
 
+    private static final String DELETE = """
+            DELETE FROM ExchangeRates
+            WHERE Id = ?
+            """;
+
     private static final String SELECT_BY_CURRENCY_ID = """
             SELECT id, BaseCurrencyId, TargetCurrencyId, Rate
             FROM ExchangeRates
@@ -38,8 +43,11 @@ public class JdbcExchangeRateRepository implements ExchangeRateRepository {
     public int save(ExchangeRate exchangeRate) {
         var generatedKey = -1;
         try (var con = ConnectionManager.open();
-             var statement = con.prepareStatement(SAVE, Statement.RETURN_GENERATED_KEYS)
+             var statement = con.prepareStatement(SAVE, Statement.RETURN_GENERATED_KEYS);
+             var enableForeignKeys = con.prepareStatement("PRAGMA foreign_keys = ON;")
         ) {
+            enableForeignKeys.execute();
+
             statement.setInt(1, exchangeRate.getBaseCurrencyId());
             statement.setInt(2, exchangeRate.getTargetCurrencyId());
             statement.setBigDecimal(3, exchangeRate.getRate());
@@ -69,6 +77,20 @@ public class JdbcExchangeRateRepository implements ExchangeRateRepository {
             throw new RuntimeException(e);
         }
         return isEffected;
+    }
+
+    @Override
+    public boolean delete(int id) {
+        var isDeleted = false;
+        try (var con = ConnectionManager.open();
+             var statement = con.prepareStatement(DELETE)
+        ) {
+            statement.setInt(1, id);
+            isDeleted = statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return isDeleted;
     }
 
     @Override

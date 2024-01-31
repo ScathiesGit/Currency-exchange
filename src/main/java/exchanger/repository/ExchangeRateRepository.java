@@ -11,6 +11,8 @@ public interface ExchangeRateRepository {
 
     boolean update(ExchangeRate rate);
 
+    boolean delete(int id);
+
     Optional<ExchangeRate> findByCurrency(int baseId, int targetId);
 
     List<ExchangeRate> findAll();

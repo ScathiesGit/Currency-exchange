@@ -9,6 +9,8 @@ public interface CurrencyRepository {
 
     int save(Currency currency);
 
+    boolean delete(int id);
+
     Optional<Currency> findById(int id);
 
     Optional<Currency> findByCode(String code);
