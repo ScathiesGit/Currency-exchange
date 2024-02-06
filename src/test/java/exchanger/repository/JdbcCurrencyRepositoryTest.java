@@ -12,6 +12,12 @@ class JdbcCurrencyRepositoryTest {
 
     private final CurrencyRepository currencyRepo = new JdbcCurrencyRepository();
 
+    private final Currency usd = Currency.builder()
+            .code("USD")
+            .fullName("US Dollar")
+            .sign("$")
+            .build();
+
     @BeforeEach
     void before() {
         currencyRepo.findAll()
@@ -22,45 +28,41 @@ class JdbcCurrencyRepositoryTest {
 
     @Test
     void whenSaveCurrencyThenFindById() {
-        var toSave = Currency.builder().code("USD").fullName("US Dollar").sign("$").build();
+        usd.setId(currencyRepo.save(usd));
 
-        toSave.setId(currencyRepo.save(toSave));
-
-        var found = currencyRepo.findById(toSave.getId()).get();
-        assertThat(toSave).isEqualTo(found);
+        var found = currencyRepo.findById(usd.getId()).get();
+        assertThat(usd).isEqualTo(found);
     }
 
     @Test
     void whenDeleteCurrencyThenNotFindById() {
-        var toDelete = Currency.builder().code("USD").fullName("US Dollar").sign("$").build();
-        toDelete.setId(currencyRepo.save(toDelete));
+        usd.setId(currencyRepo.save(usd));
 
-        currencyRepo.delete(toDelete.getId());
+        currencyRepo.delete(usd.getId());
 
         assertThat(
-                currencyRepo.findById(toDelete.getId())
+                currencyRepo.findById(usd.getId())
         ).isEmpty();
     }
 
     @Test
     void givenNotExistIdWhenDeleteThenReturnFalse() {
-        var toDelete = new Currency(1, "USD", "US Dollar", "$");
+        usd.setId(1);
 
-        var isDeleted = currencyRepo.delete(toDelete.getId());
+        var isDeleted = currencyRepo.delete(usd.getId());
 
         assertThat(isDeleted).isFalse();
     }
 
     @Test
     void givenExistIdWhenFindByIdThenReturnCurrency() {
-        var currency = Currency.builder().code("USD").fullName("US Dollar").sign("$").build();
-        currency.setId(currencyRepo.save(currency));
+        usd.setId(currencyRepo.save(usd));
 
-        var foundCurrency = currencyRepo.findById(currency.getId()).get();
+        var foundCurrency = currencyRepo.findById(usd.getId()).get();
 
         assertThat(foundCurrency)
                 .usingRecursiveComparison()
-                .isEqualTo(currency);
+                .isEqualTo(usd);
     }
 
     @Test
@@ -72,14 +74,13 @@ class JdbcCurrencyRepositoryTest {
 
     @Test
     void givenExistCodeWhenFindByCodeThenReturnCurrency() {
-        var currency = Currency.builder().code("USD").fullName("US Dollar").sign("$").build();
-        currency.setId(currencyRepo.save(currency));
+        usd.setId(currencyRepo.save(usd));
 
-        var foundCurrency = currencyRepo.findByCode(currency.getCode()).get();
+        var foundCurrency = currencyRepo.findByCode(usd.getCode()).get();
 
         assertThat(foundCurrency)
                 .usingRecursiveComparison()
-                .isEqualTo(currency);
+                .isEqualTo(usd);
     }
 
     @Test
@@ -97,7 +98,6 @@ class JdbcCurrencyRepositoryTest {
 
     @Test
     void givenNotEmptyDbWhenFindAllThenNotEmptyList() {
-        var usd = Currency.builder().code("USD").fullName("US Dollar").sign("$").build();
         var eur = Currency.builder().code("EUR").fullName("EUR").sign("€").build();
         var rub = Currency.builder().code("RUB").fullName("Russian ruble").sign("₽").build();
         usd.setId(currencyRepo.save(usd));

@@ -20,7 +20,7 @@ public class JdbcExchangeRateRepository implements ExchangeRateRepository {
     private static final String UPDATE = """
             UPDATE ExchangeRates
             SET Rate = ?
-            WHERE id = ?
+            WHERE BaseCurrencyId = ? AND TargetCurrencyId = ?
             """;
 
     private static final String DELETE = """
@@ -71,7 +71,8 @@ public class JdbcExchangeRateRepository implements ExchangeRateRepository {
              var statement = con.prepareStatement(UPDATE)
         ) {
             statement.setBigDecimal(1, exchangeRate.getRate());
-            statement.setInt(2, exchangeRate.getId());
+            statement.setInt(2, exchangeRate.getBaseCurrencyId());
+            statement.setInt(3, exchangeRate.getTargetCurrencyId());
             isEffected = statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException(e);

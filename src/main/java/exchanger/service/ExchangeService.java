@@ -1,9 +1,10 @@
 package exchanger.service;
 
-import java.math.BigDecimal;
+import exchanger.dto.ExchangeInfo;
+
 import java.util.Optional;
 
 public interface ExchangeService {
 
-    Optional<BigDecimal> exchange(String baseCode, String targetCode, double amount);
+    Optional<ExchangeInfo> exchange(String baseCode, String targetCode, double amount);
 }

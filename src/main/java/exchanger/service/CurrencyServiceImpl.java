@@ -9,7 +9,11 @@ import java.util.Optional;
 
 public class CurrencyServiceImpl implements CurrencyService {
 
-    private final CurrencyRepository currencyRepo = new JdbcCurrencyRepository();
+    private final CurrencyRepository currencyRepo;
+
+    public CurrencyServiceImpl(CurrencyRepository currencyRepo) {
+        this.currencyRepo = currencyRepo;
+    }
 
     public int save(Currency currency) {
         return currencyRepo.save(currency);

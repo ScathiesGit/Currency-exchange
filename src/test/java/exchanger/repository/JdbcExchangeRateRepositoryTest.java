@@ -11,12 +11,23 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 class JdbcExchangeRateRepositoryTest {
 
     private final ExchangeRateRepository exchangeRateRepo = new JdbcExchangeRateRepository();
 
     private final CurrencyRepository currencyRepo = new JdbcCurrencyRepository();
+
+    private final Currency usd = Currency.builder().id(1).code("USD").fullName("US Dollar").sign("$").build();
+
+    private final Currency eur = Currency.builder().id(2).code("EUR").fullName("Euro").sign("#").build();
+
+    private final ExchangeRate usdToEur = ExchangeRate.builder()
+            .baseCurrencyId(usd.getId())
+            .targetCurrencyId(eur.getId())
+            .rate(BigDecimal.valueOf(1.23))
+            .build();
 
     @BeforeEach
     void setUp() {
@@ -33,15 +44,10 @@ class JdbcExchangeRateRepositoryTest {
 
     @Test
     void givenExistCurrencyWhenSaveThenFindByCurrency() {
-        var usd = Currency.builder().code("USD").fullName("US Dollar").sign("$").build();
-        var eur = Currency.builder().code("EUR").fullName("Euro").sign("#").build();
         usd.setId(currencyRepo.save(usd));
         eur.setId(currencyRepo.save(eur));
-        var usdToEur = ExchangeRate.builder()
-                .baseCurrencyId(usd.getId())
-                .targetCurrencyId(eur.getId())
-                .rate(BigDecimal.ONE)
-                .build();
+        usdToEur.setBaseCurrencyId(usd.getId());
+        usdToEur.setTargetCurrencyId(eur.getId());
 
         usdToEur.setId(exchangeRateRepo.save(usdToEur));
         var found = exchangeRateRepo.findByCurrency(usdToEur.getBaseCurrencyId(), usdToEur.getTargetCurrencyId()).get();
@@ -51,29 +57,16 @@ class JdbcExchangeRateRepositoryTest {
 
     @Test
     void givenNotExistCurrencyWhenSaveThenThrowRuntimeException() {
-        var usd = new Currency(1, "USD", "US Dollar", "$");
-        var eur = new Currency(2, "EUR", "Euro", "&");
-        var usdToEur = ExchangeRate.builder()
-                .baseCurrencyId(usd.getId())
-                .targetCurrencyId(eur.getId())
-                .rate(BigDecimal.ONE)
-                .build();
-
         assertThatThrownBy(() -> exchangeRateRepo.save(usdToEur))
                 .isInstanceOf(RuntimeException.class);
     }
 
     @Test
     void givenExistRateWhenUpdateThenFindUpdatedRate() {
-        var usd = Currency.builder().code("USD").fullName("US Dollar").sign("$").build();
-        var eur = Currency.builder().code("EUR").fullName("Euro").sign("#").build();
         usd.setId(currencyRepo.save(usd));
         eur.setId(currencyRepo.save(eur));
-        var usdToEur = ExchangeRate.builder()
-                .baseCurrencyId(usd.getId())
-                .targetCurrencyId(eur.getId())
-                .rate(BigDecimal.ONE)
-                .build();
+        usdToEur.setBaseCurrencyId(usd.getId());
+        usdToEur.setTargetCurrencyId(eur.getId());
         usdToEur.setId(exchangeRateRepo.save(usdToEur));
         usdToEur.setRate(BigDecimal.valueOf(1.2345));
 
@@ -88,51 +81,38 @@ class JdbcExchangeRateRepositoryTest {
 
     @Test
     void givenNotExistRateWhenUpdateThenNotFindByCurrency() {
-        var usdToEur = ExchangeRate.builder()
-                .baseCurrencyId(1)
-                .targetCurrencyId(2)
-                .rate(BigDecimal.ONE)
-                .build();
-
         var isUpdated = exchangeRateRepo.update(usdToEur);
 
         var updatedRate = exchangeRateRepo.findByCurrency(usdToEur.getBaseCurrencyId(), usdToEur.getTargetCurrencyId());
-        assertThat(updatedRate).isEmpty();
-        assertThat(isUpdated).isFalse();
+
+        assertAll(
+                () -> assertThat(updatedRate).isEmpty(),
+                () -> assertThat(isUpdated).isFalse()
+        );
     }
 
     @Test
     void whenDeleteThenNotFindByCurrency() {
-        var usd = Currency.builder().code("USD").fullName("US Dollar").sign("$").build();
-        var eur = Currency.builder().code("EUR").fullName("Euro").sign("#").build();
         usd.setId(currencyRepo.save(usd));
         eur.setId(currencyRepo.save(eur));
-        var usdToEur = ExchangeRate.builder()
-                .baseCurrencyId(usd.getId())
-                .targetCurrencyId(eur.getId())
-                .rate(BigDecimal.ONE)
-                .build();
+        usdToEur.setBaseCurrencyId(usd.getId());
+        usdToEur.setTargetCurrencyId(eur.getId());
         usdToEur.setId(exchangeRateRepo.save(usdToEur));
 
         exchangeRateRepo.delete(usdToEur.getId());
 
         var found = exchangeRateRepo.findByCurrency(
                 usdToEur.getBaseCurrencyId(), usdToEur.getTargetCurrencyId()
-                );
+        );
         assertThat(found).isEmpty();
     }
 
     @Test
     void givenExistRateWhenFindByCurrencyThenReturnExchangeCurrency() {
-        var usd = Currency.builder().code("USD").fullName("US Dollar").sign("$").build();
-        var eur = Currency.builder().code("EUR").fullName("Euro").sign("#").build();
         usd.setId(currencyRepo.save(usd));
         eur.setId(currencyRepo.save(eur));
-        var usdToEur = ExchangeRate.builder()
-                .baseCurrencyId(usd.getId())
-                .targetCurrencyId(eur.getId())
-                .rate(BigDecimal.valueOf(1.2))
-                .build();
+        usdToEur.setBaseCurrencyId(usd.getId());
+        usdToEur.setTargetCurrencyId(eur.getId());
         usdToEur.setId(exchangeRateRepo.save(usdToEur));
 
         var exchangeRate = exchangeRateRepo.findByCurrency(
@@ -145,13 +125,7 @@ class JdbcExchangeRateRepositoryTest {
     }
 
     @Test
-    void givenNotExistRateWHenFindByCurrencyTHenReturnEmpty() {
-        var usdToEur = ExchangeRate.builder()
-                .baseCurrencyId(1)
-                .targetCurrencyId(2)
-                .rate(BigDecimal.valueOf(1.2))
-                .build();
-
+    void givenNotExistRateWhenFindByCurrencyTHenReturnEmpty() {
         var exchangeRate = exchangeRateRepo.findByCurrency(
                 usdToEur.getBaseCurrencyId(), usdToEur.getTargetCurrencyId()
         );
@@ -161,17 +135,12 @@ class JdbcExchangeRateRepositoryTest {
 
     @Test
     void givenNotEmptyDbWhenFindAllThenReturnAllExchangeRates() {
-        var usd = Currency.builder().code("USD").fullName("US Dollar").sign("$").build();
-        var eur = Currency.builder().code("EUR").fullName("Euro").sign("#").build();
         var rub = Currency.builder().code("RUB").fullName("Russian Ruble").sign("₽").build();
         usd.setId(currencyRepo.save(usd));
         eur.setId(currencyRepo.save(eur));
         rub.setId(currencyRepo.save(rub));
-        var usdToEur = ExchangeRate.builder()
-                .baseCurrencyId(usd.getId())
-                .targetCurrencyId(eur.getId())
-                .rate(BigDecimal.valueOf(1.2))
-                .build();
+        usdToEur.setBaseCurrencyId(usd.getId());
+        usdToEur.setTargetCurrencyId(eur.getId());
         var usdToRub = ExchangeRate.builder()
                 .baseCurrencyId(usd.getId())
                 .targetCurrencyId(rub.getId())

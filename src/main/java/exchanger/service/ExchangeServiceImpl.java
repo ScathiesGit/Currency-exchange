@@ -1,32 +1,45 @@
 package exchanger.service;
 
-import exchanger.entity.ExchangeRate;
+import exchanger.dto.ExchangeRateDto;
+import exchanger.dto.ExchangeInfo;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.Optional;
 
 public class ExchangeServiceImpl implements ExchangeService {
 
-    private final ExchangeRateServiceImpl exchangeRateService = new ExchangeRateServiceImpl();
+    private final ExchangeRateService exchangeRateService;
 
-    private final CurrencyServiceImpl currencyService = new CurrencyServiceImpl();
+    private final CurrencyService currencyService;
 
-    public Optional<BigDecimal> exchange(String baseCode, String targetCode, double amount) {
-        BigDecimal result = null;
+    public ExchangeServiceImpl(ExchangeRateService exchangeRateService, CurrencyService currencyService) {
+        this.exchangeRateService = exchangeRateService;
+        this.currencyService = currencyService;
+    }
+
+    public Optional<ExchangeInfo> exchange(String baseCode, String targetCode, double amount) {
+        ExchangeInfo result = null;
         Optional<BigDecimal> rate = findRate(baseCode, targetCode);
         if (rate.isPresent()) {
-            result = rate.get().multiply(BigDecimal.valueOf(amount), MathContext.DECIMAL64);
+            var converted = rate.get().multiply(BigDecimal.valueOf(amount), MathContext.DECIMAL32);
+            result = ExchangeInfo.builder()
+                    .baseCurrency(currencyService.findByCode(baseCode).get())
+                    .targetCurrency(currencyService.findByCode(targetCode).get())
+                    .rate(rate.get())
+                    .amount(amount)
+                    .convertedAmount(converted)
+                    .build();
         }
         return Optional.ofNullable(result);
     }
 
     private Optional<BigDecimal> findRate(String baseCode, String targetCode) {
-        BigDecimal result = null;
-
+        BigDecimal result;
         var directRate = exchangeRateService.findByCurrency(baseCode, targetCode);
         if (directRate.isPresent()) {
-            return directRate.map(ExchangeRate::getRate);
+            return directRate.map(ExchangeRateDto::getRate);
         }
 
         var reverseRate = exchangeRateService.findByCurrency(targetCode, baseCode);
@@ -41,12 +54,11 @@ public class ExchangeServiceImpl implements ExchangeService {
             var usdToTarget = exchangeRateService.findByCurrency(usd.get().getCode(), targetCode);
             if (usdToBase.isPresent() && usdToTarget.isPresent()) {
                 result = usdToTarget.get().getRate().divide(
-                        usdToBase.get().getRate(), MathContext.DECIMAL64
+                        usdToBase.get().getRate(), MathContext.DECIMAL32
                 );
                 return Optional.of(result);
             }
         }
-
         return Optional.empty();
     }
 }
