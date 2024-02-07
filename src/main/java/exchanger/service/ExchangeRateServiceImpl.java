@@ -18,11 +18,6 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
 
     private final ExchangeRateRepository exchangeRateRepo;
 
-    public ExchangeRateServiceImpl(CurrencyRepository currencyRepo, ExchangeRateRepository exchangeRateRepo) {
-        this.currencyRepo = currencyRepo;
-        this.exchangeRateRepo = exchangeRateRepo;
-    }
-
     public Optional<ExchangeRateDto> save(String baseCode, String targetCode, BigDecimal rate) {
         ExchangeRateDto result = null;
         var id = -1;
@@ -97,5 +92,20 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
                 .targetCurrency(target)
                 .rate(exchangeRate.getRate())
                 .build();
+    }
+
+    private ExchangeRateServiceImpl(CurrencyRepository currencyRepo, ExchangeRateRepository exchangeRateRepo) {
+        this.currencyRepo = currencyRepo;
+        this.exchangeRateRepo = exchangeRateRepo;
+    }
+
+    private static class SingletonHolder {
+        private static final ExchangeRateServiceImpl INSTANCE = new ExchangeRateServiceImpl(
+                JdbcCurrencyRepository.getInstance(), JdbcExchangeRateRepository.getInstance()
+        );
+    }
+
+    public static ExchangeRateServiceImpl getInstance() {
+        return SingletonHolder.INSTANCE;
     }
 }

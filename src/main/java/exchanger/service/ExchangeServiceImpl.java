@@ -14,11 +14,6 @@ public class ExchangeServiceImpl implements ExchangeService {
 
     private final CurrencyService currencyService;
 
-    public ExchangeServiceImpl(ExchangeRateService exchangeRateService, CurrencyService currencyService) {
-        this.exchangeRateService = exchangeRateService;
-        this.currencyService = currencyService;
-    }
-
     public Optional<ExchangeInfo> exchange(String baseCode, String targetCode, double amount) {
         ExchangeInfo result = null;
         Optional<BigDecimal> rate = findRate(baseCode, targetCode);
@@ -60,5 +55,20 @@ public class ExchangeServiceImpl implements ExchangeService {
             }
         }
         return Optional.empty();
+    }
+
+    private ExchangeServiceImpl(ExchangeRateService exchangeRateService, CurrencyService currencyService) {
+        this.exchangeRateService = exchangeRateService;
+        this.currencyService = currencyService;
+    }
+
+    private static class SingletonHolder {
+        private static final ExchangeServiceImpl INSTANCE = new ExchangeServiceImpl(
+                ExchangeRateServiceImpl.getInstance(), CurrencyServiceImpl.getInstance()
+        );
+    }
+
+    public static ExchangeServiceImpl getInstance() {
+        return SingletonHolder.INSTANCE;
     }
 }

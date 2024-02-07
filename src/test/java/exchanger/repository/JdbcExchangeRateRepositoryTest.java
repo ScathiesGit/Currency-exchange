@@ -15,9 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 class JdbcExchangeRateRepositoryTest {
 
-    private final ExchangeRateRepository exchangeRateRepo = new JdbcExchangeRateRepository();
+    private final ExchangeRateRepository exchangeRateRepo = JdbcExchangeRateRepository.getInstance();
 
-    private final CurrencyRepository currencyRepo = new JdbcCurrencyRepository();
+    private final CurrencyRepository currencyRepo = JdbcCurrencyRepository.getInstance();
 
     private final Currency usd = Currency.builder().id(1).code("USD").fullName("US Dollar").sign("$").build();
 

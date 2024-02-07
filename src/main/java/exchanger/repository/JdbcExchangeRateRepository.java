@@ -138,4 +138,15 @@ public class JdbcExchangeRateRepository implements ExchangeRateRepository {
                 .rate(resultSet.getBigDecimal("Rate"))
                 .build();
     }
+
+    private JdbcExchangeRateRepository() {
+    }
+
+    private static class SingletonHolder {
+        private static final JdbcExchangeRateRepository INSTANCE = new JdbcExchangeRateRepository();
+    }
+
+    public static JdbcExchangeRateRepository getInstance() {
+        return SingletonHolder.INSTANCE;
+    }
 }

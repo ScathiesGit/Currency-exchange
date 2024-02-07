@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class JdbcCurrencyRepositoryTest {
 
-    private final CurrencyRepository currencyRepo = new JdbcCurrencyRepository();
+    private final CurrencyRepository currencyRepo = JdbcCurrencyRepository.getInstance();
 
     private final Currency usd = Currency.builder()
             .code("USD")

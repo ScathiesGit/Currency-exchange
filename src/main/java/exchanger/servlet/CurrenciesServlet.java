@@ -19,7 +19,7 @@ import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 @WebServlet("/currencies")
 public class CurrenciesServlet extends HttpServlet {
 
-    private final CurrencyService currencyService = new CurrencyServiceImpl(new JdbcCurrencyRepository());
+    private final CurrencyService currencyService = CurrencyServiceImpl.getInstance();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

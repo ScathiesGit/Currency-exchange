@@ -6,7 +6,9 @@ import exchanger.util.ConnectionManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class JdbcCurrencyRepository implements CurrencyRepository {
 
@@ -136,5 +138,16 @@ public class JdbcCurrencyRepository implements CurrencyRepository {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private JdbcCurrencyRepository() {
+    }
+
+    private static class SingletonHolder {
+        public static final JdbcCurrencyRepository INSTANCE = new JdbcCurrencyRepository();
+    }
+
+    public static JdbcCurrencyRepository getInstance() {
+        return SingletonHolder.INSTANCE;
     }
 }

@@ -11,8 +11,8 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     private final CurrencyRepository currencyRepo;
 
-    public CurrencyServiceImpl(CurrencyRepository currencyRepo) {
-        this.currencyRepo = currencyRepo;
+    public static CurrencyServiceImpl getInstance() {
+        return SingletonHolder.INSTANCE;
     }
 
     public int save(Currency currency) {
@@ -33,5 +33,15 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     public List<Currency> findAll() {
         return currencyRepo.findAll();
+    }
+
+    private CurrencyServiceImpl(CurrencyRepository currencyRepo) {
+        this.currencyRepo = currencyRepo;
+    }
+
+    private static class SingletonHolder {
+        private static final CurrencyServiceImpl INSTANCE = new CurrencyServiceImpl(
+                JdbcCurrencyRepository.getInstance()
+        );
     }
 }

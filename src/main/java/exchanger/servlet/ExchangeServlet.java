@@ -23,10 +23,7 @@ import static jakarta.servlet.http.HttpServletResponse.*;
 @WebServlet("/exchange")
 public class ExchangeServlet extends HttpServlet {
 
-    private final ExchangeService exchangeService = new ExchangeServiceImpl(
-            new ExchangeRateServiceImpl(new JdbcCurrencyRepository(), new JdbcExchangeRateRepository()),
-            new CurrencyServiceImpl(new JdbcCurrencyRepository())
-    );
+    private final ExchangeService exchangeService = ExchangeServiceImpl.getInstance();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {

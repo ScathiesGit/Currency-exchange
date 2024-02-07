@@ -1,7 +1,6 @@
 package exchanger.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import exchanger.dto.IncorrectRequest;
 import exchanger.entity.Currency;
 import exchanger.service.CurrencyService;
 import exchanger.service.CurrencyServiceImpl;
