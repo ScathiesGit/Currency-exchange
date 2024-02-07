@@ -6,6 +6,7 @@ import exchanger.dto.IncorrectRequest;
 import exchanger.entity.Currency;
 import exchanger.service.ExchangeRateService;
 import exchanger.service.ExchangeRateServiceImpl;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.List;
@@ -67,9 +69,8 @@ class ExchangeRatesServletTest {
             .rate(BigDecimal.valueOf(1.22))
             .build();
 
-    @SneakyThrows
     @BeforeEach
-    void setUp() {
+    void setUp() throws NoSuchFieldException, IllegalAccessException {
         exchangeRateService = mock(ExchangeRateServiceImpl.class);
         servlet = new ExchangeRatesServlet();
         var field = servlet.getClass().getDeclaredField("exchangeRateService");
@@ -77,9 +78,8 @@ class ExchangeRatesServletTest {
         field.set(servlet, exchangeRateService);
     }
 
-    @SneakyThrows
     @Test
-    void whenDoGetThenReturnListExchangeRates() {
+    void whenDoGetThenReturnListExchangeRates() throws IOException, ServletException {
         var exchangeRates = List.of(eurToUsd, usdToEur);
         doReturn(exchangeRates).when(exchangeRateService).findAll();
         doReturn(new PrintWriter(output)).when(resp).getWriter();
@@ -89,9 +89,8 @@ class ExchangeRatesServletTest {
         assertThat(output.toString()).isEqualTo(new ObjectMapper().writeValueAsString(exchangeRates));
     }
 
-    @SneakyThrows
     @Test
-    void givenInvalidParamWhenDoPostThenBadRequest() {
+    void givenInvalidParamWhenDoPostThenBadRequest() throws IOException {
         doReturn(usd.getCode()).when(req).getParameter("baseCurrencyCode");
         doReturn(usdToEur.getTargetCurrency().getCode()).when(req).getParameter("targetCurrencyCode");
         doReturn(null).when(req).getParameter("rate");
@@ -104,9 +103,8 @@ class ExchangeRatesServletTest {
         ));
     }
 
-    @SneakyThrows
     @Test
-    void givenNotExistExchangeRateWhenDoPostThenReturnExchangeRate() {
+    void givenNotExistExchangeRateWhenDoPostThenReturnExchangeRate() throws IOException {
         doReturn(usd.getCode()).when(req).getParameter("baseCurrencyCode");
         doReturn(usdToEur.getTargetCurrency().getCode()).when(req).getParameter("targetCurrencyCode");
         doReturn(usdToEur.getRate().toString()).when(req).getParameter("rate");
@@ -120,9 +118,8 @@ class ExchangeRatesServletTest {
         assertThat(output.toString()).isEqualTo(new ObjectMapper().writeValueAsString(usdToEur));
     }
 
-    @SneakyThrows
     @Test
-    void givenNotExistCurrencyWHenDoPostThenNotFound() {
+    void givenNotExistCurrencyWHenDoPostThenNotFound() throws IOException {
         doReturn(usd.getCode()).when(req).getParameter("baseCurrencyCode");
         doReturn(usdToEur.getTargetCurrency().getCode()).when(req).getParameter("targetCurrencyCode");
         doReturn(usdToEur.getRate().toString()).when(req).getParameter("rate");

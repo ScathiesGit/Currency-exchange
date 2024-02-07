@@ -1,7 +1,5 @@
 package exchanger.servlet;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import exchanger.dto.IncorrectRequest;
 import exchanger.entity.Currency;
 import exchanger.repository.JdbcCurrencyRepository;
 import exchanger.service.CurrencyService;
@@ -14,6 +12,10 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
+import static exchanger.util.ResponseWriter.write;
+import static jakarta.servlet.http.HttpServletResponse.SC_CREATED;
+import static jakarta.servlet.http.HttpServletResponse.SC_OK;
+
 @WebServlet("/currencies")
 public class CurrenciesServlet extends HttpServlet {
 
@@ -21,38 +23,28 @@ public class CurrenciesServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        var currencies = currencyService.findAll();
-        try (var output = resp.getWriter()) {
-            new ObjectMapper().writeValue(output, currencies);
-        }
+        write(resp, currencyService.findAll(), SC_OK);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        var code = req.getParameter("code");
-        var name = req.getParameter("name");
-        var sign = req.getParameter("sign");
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) {
+        var currency = toCurrency(req);
+        currency.setId(currencyService.save(currency));
+        write(resp, currency, SC_CREATED);
+    }
+
+    private Currency toCurrency(HttpServletRequest req) {
         var currency = Currency.builder()
-                .code(code)
-                .fullName(name)
-                .sign(sign)
+                .code(req.getParameter("code"))
+                .fullName(req.getParameter("name"))
+                .sign(req.getParameter("sign"))
                 .build();
 
-        if (code != null && code.length() == 3
-                && name != null && !name.isEmpty()
-                && sign != null && !sign.isEmpty()
+        if (currency.getCode() == null || currency.getCode().length() != 3
+                || currency.getFullName() == null || currency.getSign() == null
         ) {
-            currency.setId(currencyService.save(currency));
-
-            resp.setStatus(HttpServletResponse.SC_CREATED);
-            try (var output = resp.getWriter()) {
-                new ObjectMapper().writeValue(output, currency);
-            }
-        } else {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            try (var output = resp.getWriter()) {
-                new ObjectMapper().writeValue(output, new IncorrectRequest("Отсутствует нужное поле формы"));
-            }
+            throw new IllegalArgumentException("Недостаточно данных для обновления");
         }
+        return currency;
     }
 }

@@ -2,6 +2,7 @@ package exchanger.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import exchanger.dto.IncorrectRequest;
+import exchanger.util.ResponseWriter;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletResponse;
@@ -10,6 +11,9 @@ import org.sqlite.SQLiteException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+
+import static exchanger.util.ResponseWriter.*;
+import static jakarta.servlet.http.HttpServletResponse.*;
 
 @WebFilter("/*")
 public class RootFilter implements Filter {
@@ -24,18 +28,13 @@ public class RootFilter implements Filter {
         try {
             filterChain.doFilter(servletRequest, servletResponse);
         } catch (RuntimeException e) {
+            HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
             if (e.getCause() instanceof SQLiteException) {
-                HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
-                httpResponse.setStatus(HttpServletResponse.SC_CONFLICT);
-                try (var output = servletResponse.getWriter()) {
-                    new ObjectMapper().writeValue(output, new IncorrectRequest("Такая запись уже существует"));
-                }
+                write(httpResponse, new IncorrectRequest("Такая запись уже существует"), SC_CONFLICT);
             } else if (e.getCause() instanceof SQLException) {
-                HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
-                httpResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                try (var output = servletResponse.getWriter()) {
-                    new ObjectMapper().writeValue(output, new IncorrectRequest("База данных недоступна"));
-                }
+                write(httpResponse, new IncorrectRequest("База данных недоступна"), SC_INTERNAL_SERVER_ERROR);
+            } else if (e instanceof IllegalArgumentException) {
+                write(httpResponse, new IncorrectRequest(e.getMessage()), SC_BAD_REQUEST);
             }
         }
     }

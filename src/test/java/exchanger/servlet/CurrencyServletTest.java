@@ -5,6 +5,7 @@ import exchanger.dto.IncorrectRequest;
 import exchanger.entity.Currency;
 import exchanger.service.CurrencyService;
 import exchanger.service.CurrencyServiceImpl;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Optional;
 
@@ -43,18 +45,16 @@ class CurrencyServletTest {
             .sign("$")
             .build();
 
-    @SneakyThrows
     @BeforeEach
-    void setUp() {
+    void setUp() throws NoSuchFieldException, IllegalAccessException {
         currencyService = mock(CurrencyServiceImpl.class);
         var field = servlet.getClass().getDeclaredField("currencyService");
         field.setAccessible(true);
         field.set(servlet, currencyService);
     }
 
-    @SneakyThrows
     @Test
-    void givenExistCurrencyCodeWhenDoGetThenReturnCurrency() {
+    void givenExistCurrencyCodeWhenDoGetThenReturnCurrency() throws IOException, ServletException {
         doReturn("/" + usd.getCode()).when(req).getPathInfo();
         doReturn(Optional.of(usd)).when(currencyService).findByCode(usd.getCode());
         doReturn(new PrintWriter(output)).when(resp).getWriter();
@@ -66,9 +66,8 @@ class CurrencyServletTest {
         );
     }
 
-    @SneakyThrows
     @Test
-    void givenNotExistCurrencyCodeWhenDoGetThenNotFound() {
+    void givenNotExistCurrencyCodeWhenDoGetThenNotFound() throws IOException, ServletException {
         doReturn("/" + usd.getCode()).when(req).getPathInfo();
         doReturn(Optional.empty()).when(currencyService).findByCode(usd.getCode());
         doReturn(new PrintWriter(output)).when(resp).getWriter();
@@ -77,21 +76,6 @@ class CurrencyServletTest {
 
         assertThat(output.toString()).isEqualTo(
                 new ObjectMapper().writeValueAsString(new IncorrectRequest("Валюта не найдена"))
-        );
-    }
-
-    @SneakyThrows
-    @Test
-    void givenInvalidParamWhenDoGetThenBadRequest() {
-        doReturn("/A").when(req).getPathInfo();
-        doReturn(new PrintWriter(output)).when(resp).getWriter();
-
-        servlet.doGet(req, resp);
-
-        assertThat(output.toString()).isEqualTo(
-                new ObjectMapper().writeValueAsString(
-                        new IncorrectRequest("Код валюты должен состоять из трех символов")
-                )
         );
     }
 }

@@ -8,6 +8,7 @@ import exchanger.service.CurrencyServiceImpl;
 import exchanger.service.ExchangeRateServiceImpl;
 import exchanger.service.ExchangeService;
 import exchanger.service.ExchangeServiceImpl;
+import exchanger.util.ResponseWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,6 +16,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+
+import static exchanger.util.ResponseWriter.*;
+import static jakarta.servlet.http.HttpServletResponse.*;
 
 @WebServlet("/exchange")
 public class ExchangeServlet extends HttpServlet {
@@ -30,26 +34,18 @@ public class ExchangeServlet extends HttpServlet {
         var baseCode = req.getParameter("from");
         var targetCode = req.getParameter("to");
 
-        if (amount != null && !amount.isEmpty()
-                && baseCode != null && !baseCode.isEmpty()
-                && targetCode != null && !targetCode.isEmpty()
+        if (amount == null || amount.isEmpty()
+                || baseCode == null || baseCode.length() != 3
+                || targetCode == null || targetCode.length() != 3
         ) {
-            var result = exchangeService.exchange(baseCode, targetCode, (Double.parseDouble(amount)));
-            if (result.isPresent()) {
-                try (var output = resp.getWriter()) {
-                    new ObjectMapper().writeValue(output, result.get());
-                }
-            } else {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                try (var output = resp.getWriter()) {
-                    new ObjectMapper().writeValue(output, new IncorrectRequest("Не удалось найти обменный курс"));
-                }
-            }
-        } else {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            try (var output = resp.getWriter()) {
-                new ObjectMapper().writeValue(output, new IncorrectRequest("Недостаточно данных для выполнения запроса"));
-            }
+            write(resp, new IncorrectRequest("Недостаточно данных для выполнения запроса"), SC_BAD_REQUEST);
+            return;
         }
+
+        exchangeService.exchange(baseCode, targetCode, (Double.parseDouble(amount)))
+                .ifPresentOrElse(
+                        result -> write(resp, result, SC_OK),
+                        () -> write(resp, new IncorrectRequest("Не удалось найти обменный курс"), SC_NOT_FOUND)
+                );
     }
 }

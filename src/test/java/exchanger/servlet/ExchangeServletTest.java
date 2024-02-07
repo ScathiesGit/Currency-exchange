@@ -6,6 +6,7 @@ import exchanger.dto.IncorrectRequest;
 import exchanger.entity.Currency;
 import exchanger.service.ExchangeService;
 import exchanger.service.ExchangeServiceImpl;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -61,9 +63,8 @@ class ExchangeServletTest {
             .amount(10)
             .build();
 
-    @SneakyThrows
     @BeforeEach
-    void setUp() {
+    void setUp() throws NoSuchFieldException, IllegalAccessException {
         exchangeService = mock(ExchangeServiceImpl.class);
         var field = servlet.getClass().getDeclaredField("exchangeService");
         field.setAccessible(true);
@@ -74,9 +75,8 @@ class ExchangeServletTest {
         );
     }
 
-    @SneakyThrows
     @Test
-    void givenExistExchangeRateWhenDoGetThenReturnCurrenciesExchange() {
+    void givenExistExchangeRateWhenDoGetThenReturnCurrenciesExchange() throws IOException, ServletException {
         doReturn(String.valueOf(exchange.getAmount())).when(req).getParameter("amount");
         doReturn(exchange.getBaseCurrency().getCode()).when(req).getParameter("from");
         doReturn(exchange.getTargetCurrency().getCode()).when(req).getParameter("to");
@@ -90,9 +90,8 @@ class ExchangeServletTest {
         assertThat(output.toString()).isEqualTo(new ObjectMapper().writeValueAsString(exchange));
     }
 
-    @SneakyThrows
     @Test
-    void givenNotExistExchangeRateWhenDoGetThenNotFound() {
+    void givenNotExistExchangeRateWhenDoGetThenNotFound() throws IOException, ServletException {
         doReturn(String.valueOf(exchange.getAmount())).when(req).getParameter("amount");
         doReturn(exchange.getBaseCurrency().getCode()).when(req).getParameter("from");
         doReturn(exchange.getTargetCurrency().getCode()).when(req).getParameter("to");
@@ -108,9 +107,8 @@ class ExchangeServletTest {
         ));
     }
 
-    @SneakyThrows
     @Test
-    void givenInvalidParamWhenDoGetThenBadRequest() {
+    void givenInvalidParamWhenDoGetThenBadRequest() throws IOException, ServletException {
         doReturn("10").when(req).getParameter("amount");
         doReturn(null).when(req).getParameter("from");
         doReturn("EUR").when(req).getParameter("to");

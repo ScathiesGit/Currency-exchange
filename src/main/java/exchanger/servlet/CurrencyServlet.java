@@ -5,6 +5,7 @@ import exchanger.dto.IncorrectRequest;
 import exchanger.repository.JdbcCurrencyRepository;
 import exchanger.service.CurrencyService;
 import exchanger.service.CurrencyServiceImpl;
+import exchanger.util.ResponseWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,6 +14,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
+import static exchanger.util.ResponseWriter.*;
+import static jakarta.servlet.http.HttpServletResponse.*;
+
 @WebServlet("/currency/*")
 public class CurrencyServlet extends HttpServlet {
 
@@ -20,24 +24,10 @@ public class CurrencyServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        var currencyCode = req.getPathInfo().substring(1);
-        if (currencyCode.length() == 3) {
-            var currency = currencyService.findByCode(currencyCode);
-            if (currency.isPresent()) {
-                try (var output = resp.getWriter()) {
-                    new ObjectMapper().writeValue(output, currency.get());
-                }
-            } else {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                try (var output = resp.getWriter()) {
-                    new ObjectMapper().writeValue(output, new IncorrectRequest("Валюта не найдена"));
-                }
-            }
-        } else {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            try (var output = resp.getWriter()) {
-                new ObjectMapper().writeValue(output, new IncorrectRequest("Код валюты должен состоять из трех символов"));
-            }
-        }
+        currencyService.findByCode(req.getPathInfo().substring(1))
+                .ifPresentOrElse(
+                        currency -> write(resp, currency, SC_OK),
+                        () -> write(resp, new IncorrectRequest("Валюта не найдена"), SC_NOT_FOUND)
+                );
     }
 }

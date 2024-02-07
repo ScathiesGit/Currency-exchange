@@ -3,33 +3,24 @@ package exchanger.servlet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import exchanger.dto.IncorrectRequest;
 import exchanger.entity.Currency;
-import exchanger.repository.JdbcCurrencyRepository;
 import exchanger.service.CurrencyService;
 import exchanger.service.CurrencyServiceImpl;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.sqlite.SQLiteException;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
-import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.doReturn;
 
 @ExtendWith({MockitoExtension.class})
 class CurrenciesServletTest {
@@ -83,18 +74,14 @@ class CurrenciesServletTest {
 
     @SneakyThrows
     @Test
-    void givenInvalidParamWhenDoPostThenBadRequest()  {
+    void givenInvalidParamWhenDoPostThenThrowIllegalArgException()  {
         doReturn("").when(req).getParameter("code");
         doReturn("dollar").when(req).getParameter("name");
         doReturn("$").when(req).getParameter("sign");
-        doReturn(new PrintWriter(output)).when(resp).getWriter();
-        var expected = new ObjectMapper().writeValueAsString(
-                new IncorrectRequest("Отсутствует нужное поле формы")
-        );
 
-        servlet.doPost(req, resp);
-
-        assertThat(output.toString()).isEqualTo(expected);
+        assertThatThrownBy(
+                () -> servlet.doPost(req, resp)
+        ).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
